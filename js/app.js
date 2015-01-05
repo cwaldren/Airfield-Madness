@@ -112,8 +112,8 @@ function update(dt) {
 }
 
 function updatePlane(dt) {
-    planeObj.pos[0] += Math.cos(planeObj.rot-Math.PI/2) * dt * 0;
-    planeObj.pos[1] += Math.sin(planeObj.rot-Math.PI/2) * dt * 0;
+    planeObj.pos[0] += Math.cos(planeObj.rot-Math.PI/2) * dt * 50;
+    planeObj.pos[1] += Math.sin(planeObj.rot-Math.PI/2) * dt * 50;
 
     if (input.isDown('a')) {
         planeObj.rot -= .01;
@@ -125,11 +125,11 @@ function updatePlane(dt) {
 
      if (input.isDown('w')) {
         if (planeObj.alt > 0.)
-        planeObj.alt -= .01;
+        planeObj.alt -= .002;
     }
      if (input.isDown('s')) {
         if (planeObj.alt < .8)
-        planeObj.alt += .01;
+        planeObj.alt += .002;
     }
 }
 
