@@ -29,6 +29,9 @@ runway.src = "http://localhost/Airfield-Madness/img/runway.png";
 var planeImg = new Image();
 planeImg.src = "http://localhost/Airfield-Madness/img/plane.png";
 
+var bluePlaneImg = new Image();
+bluePlaneImg.src = "http://localhost/Airfield-Madness/img/plane_you.png";
+
 
 var shadowImg = new Image();
 shadowImg.src = "http://localhost/Airfield-Madness/img/plane_shadow.png";
@@ -52,11 +55,11 @@ var prevTime;
 //     rot: Math.PI/2,
 //     alt: 0.
 // }
-var plane = new Plane([400, 200], Math.PI/2, 0.0, planeImg, shadowImg);
+var plane = new Plane([400, 240], Math.PI/2, 0.0, bluePlaneImg, shadowImg);
 var planes = [];
 
-for (i = 0; i < 100; i++) {
-    planes.push(new Plane([Math.random()*(canvas.width-100)+100, Math.random()*(canvas.height-100)+100], Math.PI*Math.random(), Math.random(), planeImg, shadowImg));
+for (i = 0; i < 10; i++) {
+    planes.push(new Plane([Math.random()*(canvas.width-100)+100, Math.random()*(canvas.height-100)+100], Math.PI*Math.random(), Math.random()*.7, planeImg, shadowImg));
 }
 
 function main() {
@@ -108,12 +111,11 @@ function renderPlanes(){
     var p = planes.slice(0);
     p.push(plane);
     p.sort(function(a,b) {return a.alt - b.alt});
-    for (i = 0; i < planes.length; i++) {
+    for (i = 0; i < p.length; i++) {
         ctx.save();
         p[i].render(ctx);
         ctx.restore();
     }
-
 
    
 }
@@ -128,8 +130,9 @@ function update(dt) {
 }
 
 function updatePlane(dt) {
-   
     plane.update(dt);
+    msg = plane.alt;
+
     if (input.isDown('a')) {
         plane.rot -= .8*dt;
     }
@@ -137,10 +140,10 @@ function updatePlane(dt) {
         plane.rot += .8*dt;
     }
     if (input.isDown('w') && plane.alt > 0.0) {
-        plane.alt -= .001;
+        plane.alt -= .002;
     }
     if (input.isDown('s') && plane.alt < 0.8) {
-        plane.alt += .001;
+        plane.alt += .002;
     }
     
 }

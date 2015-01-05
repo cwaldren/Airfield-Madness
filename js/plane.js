@@ -24,18 +24,20 @@
           
 
             //get to the general correct position
-            ctx.translate(this.pos[0] + 50*this.alt,  this.pos[1] + 50*this.alt);
-
             //shadow 
             ctx.save();
+            ctx.translate(this.pos[0] + 50*this.alt *Math.exp(this.alt),  this.pos[1] + 50*this.alt*Math.exp(this.alt));
+
             ctx.scale(this.alt + .5 , this.alt + .5);
 
             ctx.rotate(this.rot);
-            ctx.globalAlpha = (1/this.alt) - 1;
+            ctx.globalAlpha = 1.0- (this.alt +.1);
             ctx.drawImage(this.shadow, -half_width, -half_height/2 - 40);
             ctx.restore();
 
             //plane 
+            ctx.translate(this.pos[0] ,  this.pos[1] );
+
             ctx.scale(this.alt + .5 , this.alt + .5);
             ctx.translate(- 50*this.alt, - 50*this.alt);
             ctx.rotate(this.rot);
