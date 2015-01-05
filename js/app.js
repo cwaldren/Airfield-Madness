@@ -26,28 +26,41 @@ var msg = "";
 var runway = new Image();
 runway.src = "http://localhost/Airfield-Madness/img/runway.png";
 
-var plane = new Image();
-plane.src = "http://localhost/Airfield-Madness/img/plane.png";
+var planeImg = new Image();
+planeImg.src = "http://localhost/Airfield-Madness/img/plane.png";
 
 
-var planeShadow = new Image();
-planeShadow.src = "http://localhost/Airfield-Madness/img/plane_shadow.png";
+var shadowImg = new Image();
+shadowImg.src = "http://localhost/Airfield-Madness/img/plane_shadow.png";
 
 var grass = new Image();
 grass.src = "http://localhost/Airfield-Madness/img/grass.png";
 
+
+var stats = new Stats();
+stats.setMode(0);
+document.body.appendChild( stats.domElement );
+
+
 var gameTime = 0;
-var mouse = { x:0, y:0, age:Date.now()};
+var mouse = { x:0, y:0};
             
 var prevTime;
 
-var planeObj = {
-    pos: [400, 200],
-    rot: Math.PI/2,
-    alt: 0.
+// var planeObj = {
+//     pos: [400, 200],
+//     rot: Math.PI/2,
+//     alt: 0.
+// }
+var plane = new Plane([400, 200], Math.PI/2, 0.0, planeImg, shadowImg);
+var planes = [];
+
+for (i = 0; i < 100; i++) {
+    planes.push(new Plane([Math.random()*(canvas.width-100)+100, Math.random()*(canvas.height-100)+100], Math.PI*Math.random(), Math.random(), planeImg, shadowImg));
 }
 
 function main() {
+    stats.begin();
     var now = Date.now();
     var deltaTime = (now - prevTime) / 1000.0;
 
@@ -55,6 +68,7 @@ function main() {
     render();
 
     prevTime = now;
+    stats.end();
     requestAnimFrame(main);
 }
 
@@ -67,41 +81,20 @@ function init() {
 function render() {
    //note to self: this is crazy when remove the clear loop
 
-   renderBackgroundStuff();
-
-   var alt = .9+ (1.0-planeObj.alt);
+    renderBackgroundStuff();
+    renderPlanes();
    
-    var half_width = planeShadow.width/2;
-    var half_height = planeShadow.height/2;
-
-    ctx.save();
-
-    ctx.translate(planeObj.pos[0] + 50*planeObj.alt, planeObj.pos[1] + 50*planeObj.alt);
-    ctx.translate(half_width, half_height);
-    ctx.globalAlpha = .2+ 1.0 - planeObj.alt;
-    ctx.rotate(planeObj.rot);
-    ctx.scale(planeObj.alt + .5, planeObj.alt + .5)
-    ctx.drawImage(planeShadow, -half_width, -half_height/2 - 40);
-   
-    ctx.restore();
-
-    ctx.save();
-    half_width = plane.width/2;
-    half_height = plane.height/2;
-
-    ctx.translate(planeObj.pos[0], planeObj.pos[1]);
-    ctx.translate(half_width, half_height);
-    ctx.rotate(planeObj.rot);
-    ctx.scale(planeObj.alt + .5 , planeObj.alt + .5);
-    ctx.drawImage(plane, -half_width, -half_height/2 -40);
-    ctx.restore();
-
-
     ctx.fillStyle = "black";
     ctx.font = "bold 16px Arial";
     ctx.fillText(msg, 100, 100);
 }
-
+function compare (a, b) {
+          if (a.alt < b.alt)
+             return 1;
+          if (a.alt > b.alt)
+            return -1;
+          return 0;
+    }
 function renderBackgroundStuff() {
     var pattern = ctx.createPattern(grass, 'repeat');
     ctx.fillStyle = pattern;
@@ -110,65 +103,49 @@ function renderBackgroundStuff() {
     ctx.drawImage(runway, 400, 200);
 }
 
+
+function renderPlanes(){
+    var p = planes.slice(0);
+    p.push(plane);
+    p.sort(function(a,b) {return a.alt - b.alt});
+    for (i = 0; i < planes.length; i++) {
+        ctx.save();
+        p[i].render(ctx);
+        ctx.restore();
+    }
+
+
+   
+}
 function update(dt) {
     gameTime += dt;
-    updatePlane(dt)
-    //update entities
-    //check collisions etc.
+    for (i = 0; i < planes.length; i++) {
+        planes[i].update(dt);
+        planes[i].rot += .8*dt;
+    }
+    updatePlane(dt);
+   
 }
 
 function updatePlane(dt) {
-    planeObj.pos[0] += Math.cos(planeObj.rot-Math.PI/2) * dt * 50 * (planeObj.alt*4+1.4);
-    planeObj.pos[1] += Math.sin(planeObj.rot-Math.PI/2) * dt * 50 *(planeObj.alt*4+1.4);
-
+   
+    plane.update(dt);
     if (input.isDown('a')) {
-        planeObj.rot -= .8*dt;
-
+        plane.rot -= .8*dt;
     }
     if (input.isDown('d')) {
-        planeObj.rot += .8*dt;
+        plane.rot += .8*dt;
     }
-
-     if (input.isDown('w')) {
-        if (planeObj.alt > 0.)
-        planeObj.alt -= .001;
+    if (input.isDown('w') && plane.alt > 0.0) {
+        plane.alt -= .001;
     }
-     if (input.isDown('s')) {
-        if (planeObj.alt < .8)
-        planeObj.alt += .001;
+    if (input.isDown('s') && plane.alt < 0.8) {
+        plane.alt += .001;
     }
+    
 }
 
-function updatePlaneOld(dt) {
-    var dx =  planeObj.pos[0]- mouse.x ;//mouse.x - planeObj.pos[0];
-    var dy = planeObj.pos[1]-mouse.y  ;//mouse.y - planeObj.pos[1];
 
-    var dist = Math.sqrt(dx*dx + dy*dy);
-
-    plane.holding = (Date.now() - mouse.age > 1000 && (dist <= 100)) || dist < 100   ; 
-
-
-    if (plane.holding) {
-       
-        //center is the mouse
-        var theta = .5 * Math.PI/180;
-        var ax = Math.cos(theta) * dx - Math.sin(theta) * dy + mouse.x;
-        var ay = Math.sin(theta) * dx + Math.cos(theta) * dy + mouse.y;
-        planeObj.rot = Math.atan2(dy, dx) + Math.PI;
-        planeObj.pos[0] = ax;
-        planeObj.pos[1] = ay;
-}else{
-
-   
-
-var slope = dy/dx;
-    var angle = Math.atan2(dy, dx) ;
-    var dif = planeObj.rot - (angle + Math.PI/2);
-   planeObj.rot = (angle-Math.PI/2);
-    planeObj.pos[0] -= Math.cos(angle );
-    planeObj.pos[1] -= Math.sin(angle );
-    }
-}
 
 init();
 
