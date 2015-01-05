@@ -22,11 +22,15 @@ resizeCanvas();
 
 document.body.appendChild(canvas);
 
+var msg = "";
 var runway = new Image();
 runway.src = "http://localhost/Airfield-Madness/img/runway.png";
 
 var plane = new Image();
 plane.src = "http://localhost/Airfield-Madness/img/plane.png";
+
+var planeShadow = new Image();
+planeShadow.src = "http://localhost/Airfield-Madness/img/plane_shadow.png";
 
 var grass = new Image();
 grass.src = "http://localhost/Airfield-Madness/img/grass.png";
@@ -40,7 +44,7 @@ var planeObj = {
     pos: [400, 100],
     rot: Math.PI,
     holding:false,
-    alt: 1.0
+    alt: .5
 }
 function main() {
     var now = Date.now();
@@ -64,15 +68,40 @@ function render() {
     ctx.fillStyle = pattern;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-   
+   var alt = .9+(1.0-planeObj.alt);
     ctx.drawImage(runway, 400, 200);
+var half_width = planeShadow.width/2;
+    var half_height = planeShadow.height/2;
 
     ctx.save();
-    ctx.translate(planeObj.pos[0], planeObj.pos[1]);
+    ctx.translate(planeObj.pos[0]+50*planeObj.alt, planeObj.pos[1]+50*planeObj.alt);
+        ctx.translate(half_width, half_height);
+
+    ctx.globalAlpha = .2+1.0-planeObj.alt;
     ctx.rotate(planeObj.rot);
-    ctx.drawImage(plane, -plane.width/2, -plane.height/2, plane.width/planeObj.alt, plane.height/planeObj.alt);
+    ctx.scale(planeObj.alt+.5, planeObj.alt+.5)
+    ctx.drawImage(planeShadow, -planeShadow.width/2, -planeShadow.height/2);
+
     ctx.restore();
 
+    ctx.save();
+    var half_width = plane.width/2;
+    var half_height = plane.height/2;
+
+    ctx.translate(planeObj.pos[0], planeObj.pos[1]);
+    ctx.translate(half_width, half_height);
+    ctx.rotate(planeObj.rot);
+    ctx.scale(planeObj.alt+.5, planeObj.alt+.5);
+
+    ctx.drawImage(plane, -plane.width/2, -plane.height/2);
+msg=1.0-planeObj.alt;
+ 
+   ctx.restore();
+
+
+ctx.fillStyle = "blue";
+ ctx.font = "bold 16px Arial";
+  ctx.fillText(msg, 100, 100);
 }
 
 function update(dt) {
@@ -83,8 +112,8 @@ function update(dt) {
 }
 
 function updatePlane(dt) {
-    planeObj.pos[0] += Math.cos(planeObj.rot-Math.PI/2);
-    planeObj.pos[1] += Math.sin(planeObj.rot-Math.PI/2);
+    planeObj.pos[0] += Math.cos(planeObj.rot-Math.PI/2) * dt * 0;
+    planeObj.pos[1] += Math.sin(planeObj.rot-Math.PI/2) * dt * 0;
 
     if (input.isDown('a')) {
         planeObj.rot -= .01;
@@ -95,12 +124,12 @@ function updatePlane(dt) {
     }
 
      if (input.isDown('w')) {
-        if (planeObj.alt < 1.3)
-        planeObj.alt += .001;
+        if (planeObj.alt > 0.)
+        planeObj.alt -= .01;
     }
      if (input.isDown('s')) {
-        if (planeObj.alt > .8)
-        planeObj.alt -= .001;
+        if (planeObj.alt < .8)
+        planeObj.alt += .01;
     }
 }
 
