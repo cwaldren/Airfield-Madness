@@ -29,6 +29,7 @@ runway.src = "http://localhost/Airfield-Madness/img/runway.png";
 var plane = new Image();
 plane.src = "http://localhost/Airfield-Madness/img/plane.png";
 
+
 var planeShadow = new Image();
 planeShadow.src = "http://localhost/Airfield-Madness/img/plane_shadow.png";
 
@@ -41,11 +42,11 @@ var mouse = { x:0, y:0, age:Date.now()};
 var prevTime;
 
 var planeObj = {
-    pos: [400, 100],
-    rot: Math.PI,
-    holding:false,
-    alt: .5
+    pos: [400, 200],
+    rot: Math.PI/2,
+    alt: 0.
 }
+
 function main() {
     var now = Date.now();
     var deltaTime = (now - prevTime) / 1000.0;
@@ -64,44 +65,49 @@ function init() {
 }
 
 function render() {
-    var pattern = ctx.createPattern(grass, 'repeat');
-    ctx.fillStyle = pattern;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+   //note to self: this is crazy when remove the clear loop
 
-   var alt = .9+(1.0-planeObj.alt);
-    ctx.drawImage(runway, 400, 200);
-var half_width = planeShadow.width/2;
+   renderBackgroundStuff();
+
+   var alt = .9+ (1.0-planeObj.alt);
+   
+    var half_width = planeShadow.width/2;
     var half_height = planeShadow.height/2;
 
     ctx.save();
-    ctx.translate(planeObj.pos[0]+50*planeObj.alt, planeObj.pos[1]+50*planeObj.alt);
-        ctx.translate(half_width, half_height);
 
-    ctx.globalAlpha = .2+1.0-planeObj.alt;
+    ctx.translate(planeObj.pos[0] + 50*planeObj.alt, planeObj.pos[1] + 50*planeObj.alt);
+    ctx.translate(half_width, half_height);
+    ctx.globalAlpha = .2+ 1.0 - planeObj.alt;
     ctx.rotate(planeObj.rot);
-    ctx.scale(planeObj.alt+.5, planeObj.alt+.5)
-    ctx.drawImage(planeShadow, -planeShadow.width/2, -planeShadow.height/2);
-
+    ctx.scale(planeObj.alt + .5, planeObj.alt + .5)
+    ctx.drawImage(planeShadow, -half_width, -half_height/2 - 40);
+   
     ctx.restore();
 
     ctx.save();
-    var half_width = plane.width/2;
-    var half_height = plane.height/2;
+    half_width = plane.width/2;
+    half_height = plane.height/2;
 
     ctx.translate(planeObj.pos[0], planeObj.pos[1]);
     ctx.translate(half_width, half_height);
     ctx.rotate(planeObj.rot);
-    ctx.scale(planeObj.alt+.5, planeObj.alt+.5);
-
-    ctx.drawImage(plane, -plane.width/2, -plane.height/2);
-msg=1.0-planeObj.alt;
- 
-   ctx.restore();
+    ctx.scale(planeObj.alt + .5 , planeObj.alt + .5);
+    ctx.drawImage(plane, -half_width, -half_height/2 -40);
+    ctx.restore();
 
 
-ctx.fillStyle = "blue";
- ctx.font = "bold 16px Arial";
-  ctx.fillText(msg, 100, 100);
+    ctx.fillStyle = "black";
+    ctx.font = "bold 16px Arial";
+    ctx.fillText(msg, 100, 100);
+}
+
+function renderBackgroundStuff() {
+    var pattern = ctx.createPattern(grass, 'repeat');
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.drawImage(runway, 400, 200);
 }
 
 function update(dt) {
@@ -112,24 +118,24 @@ function update(dt) {
 }
 
 function updatePlane(dt) {
-    planeObj.pos[0] += Math.cos(planeObj.rot-Math.PI/2) * dt * 50;
-    planeObj.pos[1] += Math.sin(planeObj.rot-Math.PI/2) * dt * 50;
+    planeObj.pos[0] += Math.cos(planeObj.rot-Math.PI/2) * dt * 50 * (planeObj.alt*4+1.4);
+    planeObj.pos[1] += Math.sin(planeObj.rot-Math.PI/2) * dt * 50 *(planeObj.alt*4+1.4);
 
     if (input.isDown('a')) {
-        planeObj.rot -= .01;
+        planeObj.rot -= .8*dt;
 
     }
     if (input.isDown('d')) {
-        planeObj.rot += .01;
+        planeObj.rot += .8*dt;
     }
 
      if (input.isDown('w')) {
         if (planeObj.alt > 0.)
-        planeObj.alt -= .002;
+        planeObj.alt -= .001;
     }
      if (input.isDown('s')) {
         if (planeObj.alt < .8)
-        planeObj.alt += .002;
+        planeObj.alt += .001;
     }
 }
 
