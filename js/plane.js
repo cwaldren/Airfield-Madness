@@ -6,6 +6,7 @@
         this.image = image;
         this.shadow = shadow;
         this.baseSpeed = 1.4;
+        this.landed = false;
     }
 
     Plane.prototype = {

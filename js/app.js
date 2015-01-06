@@ -32,13 +32,20 @@ planeImg.src = "http://localhost/Airfield-Madness/img/plane.png";
 var bluePlaneImg = new Image();
 bluePlaneImg.src = "http://localhost/Airfield-Madness/img/plane_you.png";
 
-
 var shadowImg = new Image();
 shadowImg.src = "http://localhost/Airfield-Madness/img/plane_shadow.png";
 
 var grass = new Image();
 grass.src = "http://localhost/Airfield-Madness/img/grass.png";
 
+var s1 = new Image();s1.src="http://localhost/Airfield-Madness/img/smoke/1.png";
+var s2 = new Image();s2.src="http://localhost/Airfield-Madness/img/smoke/2.png";
+var s3 = new Image();s3.src="http://localhost/Airfield-Madness/img/smoke/3.png";
+var s4 = new Image();s4.src="http://localhost/Airfield-Madness/img/smoke/4.png";
+var s5 = new Image();s5.src="http://localhost/Airfield-Madness/img/smoke/5.png";
+var s6 = new Image();s6.src="http://localhost/Airfield-Madness/img/smoke/6.png";
+var smokeFrame = [s1, s2, s3, s4, s5, s6];
+var smoke = new Animated([400, 300], Math.PI/2,smokeFrame);
 
 var stats = new Stats();
 stats.setMode(0);
@@ -50,16 +57,19 @@ var mouse = { x:0, y:0};
             
 var prevTime;
 
-// var planeObj = {
-//     pos: [400, 200],
-//     rot: Math.PI/2,
-//     alt: 0.
-// }
-var plane = new Plane([400, 240], Math.PI/2, 0.0, bluePlaneImg, shadowImg);
+
+var plane = new Plane([400, 240], Math.PI/2, 0.5, bluePlaneImg, shadowImg);
 var planes = [];
 
+
+
 for (i = 0; i < 10; i++) {
-    planes.push(new Plane([Math.random()*(canvas.width-100)+100, Math.random()*(canvas.height-100)+100], Math.PI*Math.random(), Math.random()*.7, planeImg, shadowImg));
+    planes.push(new Plane(
+        [Math.random()*(canvas.width-100)+100, Math.random()*(canvas.height-100)+100],
+         Math.PI*Math.random(), 
+         Math.random()*.7,
+         planeImg, 
+         shadowImg));
 }
 
 function main() {
@@ -84,29 +94,26 @@ function init() {
 function render() {
    //note to self: this is crazy when remove the clear loop
 
-    renderBackgroundStuff();
+    renderBackground();
+    renderSmoke();
     renderPlanes();
-   
     ctx.fillStyle = "black";
     ctx.font = "bold 16px Arial";
     ctx.fillText(msg, 100, 100);
 }
-function compare (a, b) {
-          if (a.alt < b.alt)
-             return 1;
-          if (a.alt > b.alt)
-            return -1;
-          return 0;
-    }
-function renderBackgroundStuff() {
+
+function renderBackground() {
     var pattern = ctx.createPattern(grass, 'repeat');
     ctx.fillStyle = pattern;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     ctx.drawImage(runway, 400, 200);
 }
 
-
+function renderSmoke() {
+    ctx.save();
+    smoke.render(ctx);
+    ctx.restore();
+}
 function renderPlanes(){
     var p = planes.slice(0);
     p.push(plane);
@@ -116,9 +123,8 @@ function renderPlanes(){
         p[i].render(ctx);
         ctx.restore();
     }
-
-   
 }
+
 function update(dt) {
     gameTime += dt;
     for (i = 0; i < planes.length; i++) {
@@ -126,6 +132,11 @@ function update(dt) {
         planes[i].rot += .8*dt;
     }
     updatePlane(dt);
+    
+    smoke.pos = plane.pos;
+    smoke.rot = plane.rot;
+    smoke.update(dt);
+
    
 }
 
@@ -146,11 +157,15 @@ function updatePlane(dt) {
         plane.alt += .002;
     }
     
+    if (plane.alt <= .01 && !this.landed) {
+        smoke.frame=0;
+        this.landed = true;
+    }
+    if (plane.alt >= .01) {
+        this.landed = false;
+    }
+
 }
-
-
-
-init();
 
 
 window.addEventListener('mousemove', updateMouse, false);
@@ -163,6 +178,7 @@ function updateMouse(e) {
     mouse.y = pos.y;
 
 }
+
 function getMousePos(canvas, evt) {
     var rect = canvas.getBoundingClientRect();
     return {
@@ -170,3 +186,6 @@ function getMousePos(canvas, evt) {
       y: evt.clientY - rect.top
     };
 }
+
+
+init();
